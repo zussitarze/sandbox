@@ -1,0 +1,8 @@
+Simple forward search planner.  
+
+Uses Racket macros to specify planning domains, which are then solved using a forward search algorithm.
+The domain consists of constants and actions. With the latter, acting on the former.  Each action 
+has a set of preconditions and state changing effects.
+
+If the problem domain can be solved, the planner prints out the required sequence of steps.
+
