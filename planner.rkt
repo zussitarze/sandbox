@@ -25,16 +25,16 @@
   (syntax-rules (constants actions preconds effects)
     [(domain (constants (t (o ...)) ...)
              (actions (n ([arg arg-type] ...) 
-                         (preconds ps ...) 
-                         (effects es ...))
+                         (preconds p ...) 
+                         (effects e ...))
                       ...))
      (plan-domain (make-immutable-hasheq '((t . (o ...)) ...))
                   (make-immutable-hasheq
                    `((n . ,(action 'n
                                    '(arg-type ...)
                                    '(arg ...)
-                                   (list (precond-helper ps) ...)
-                                   (list (effect-helper es) ...)))
+                                   (list (precond-helper p) ...)
+                                   (list (effect-helper e) ...)))
                      ...)))]))
       
 (define-syntax precond-helper
@@ -105,7 +105,7 @@
 (define (fwd-search pd s0 g)
   (define const-tbl (plan-domain-constants pd))
   (define action-tbl (plan-domain-actions pd))
-  (define (fws s prev acts)
+  (let fws ([s s0] [prev (set)] [acts '()])
     (cond [(set-member? prev s) #f] ;prevent loops to previous states 
           [(hash-subset? g s) (reverse acts)]
           [else 
@@ -114,10 +114,9 @@
              (cond [(try-apply a args s) 
                     => (λ (s2)
                          (fws s2 (set-add prev s) (cons (cons (action-name a) args) acts)))]
-                   [else #f]))]))
-    (fws s0 (set) empty))
+                   [else #f]))])))
   
-
+  
 ;; Used to test a solution for validity 
 (define (test-sol pd s0 g loa)
   (let ([sg (foldl (λ (a-args s)

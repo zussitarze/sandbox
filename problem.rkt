@@ -18,15 +18,15 @@
                    (equip-shield ()
                                  (preconds (loc (knight) = armory))
                                  (effects (shield () <- #t)))
-                   (sleigh-dragon ([c location])
-                                  (preconds (loc (knight) = c)
-                                            (loc (dragon) = c)
+                   (sleigh-dragon ([l location])
+                                  (preconds (loc (knight) = l)
+                                            (loc (dragon) = l)
                                             (sword () = #t)
                                             (shield () = #t))
                                   (effects (loc (dragon) <- hell)))
-                   (rescue-princess ([c location])
-                                    (preconds (loc (knight) = c)
-                                              (loc (princess) = c))
+                   (rescue-princess ([l location])
+                                    (preconds (loc (knight) = l)
+                                              (loc (princess) = l))
                                     (effects (free (princess) <- #t))))))
 
 (define start (state (adj (<=> castle blacksmith))
@@ -42,8 +42,7 @@
                     (loc (princess) = castle)))
 
 (fwd-search medieval-domain start goal)
-
-#| -> 
+#| 
 '((move knight castle armory)
   (equip-shield)
   (move knight armory castle)
