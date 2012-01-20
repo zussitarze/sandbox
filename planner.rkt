@@ -8,18 +8,6 @@
 (struct effect (name terms val))
 (struct state-var (name terms) #:transparent)
 
-(define-syntax state
-  (syntax-rules ()
-    [(state sv ...) 
-     (make-immutable-hash 
-      `(,@(state-helper sv) ...))]))
-
-(define-syntax state-helper
-  (syntax-rules (= <=>)
-    [(state-helper (n ts)) (state-helper (n ts = #t))]
-    [(state-helper (n (<=> t1 t2) = v)) `(,@(state-helper (n (t1 t2) = v))
-                                          ,@(state-helper (n (t2 t1) = v)))]
-    [(state-helper (n ts = v)) (list (cons (state-var 'n 'ts) 'v))]))
 
 (define-syntax domain
   (syntax-rules (constants actions preconds effects)
@@ -45,6 +33,19 @@
 (define-syntax effect-helper
   (syntax-rules (<-)
     [(effect-helper (n ts <- v)) (effect 'n 'ts 'v)]))
+
+(define-syntax state
+  (syntax-rules ()
+    [(state sv ...) 
+     (make-immutable-hash 
+      `(,@(state-helper sv) ...))]))
+
+(define-syntax state-helper
+  (syntax-rules (= <=>)
+    [(state-helper (n ts)) (state-helper (n ts = #t))]
+    [(state-helper (n (<=> t1 t2) = v)) `(,@(state-helper (n (t1 t2) = v))
+                                          ,@(state-helper (n (t2 t1) = v)))]
+    [(state-helper (n ts = v)) (list (cons (state-var 'n 'ts) 'v))]))
 
 (define (hash-subset? x y)
   (for/and ([(k v) (in-hash x)])
