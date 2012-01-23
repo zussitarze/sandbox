@@ -1,0 +1,5 @@
+Erlang inspired bytesyntax library for Racket.
+
+A syntax extension implementing a subset of Erlang's bit/byte syntax, to allow for convenient construction and deconstruction of racket byte-strings. See example.rkt for a demonstration of it's use.
+
+Caveat Emptor: While this library is intended to be useful, it's creation was primarily motivated by the author's desire to explore the syntax/parse meta-library.  For a more thorough translation of the Erlang bit-syntax, you may wish to look at: http://planet.racket-lang.org/display.ss?package=bitsyntax.plt&owner=tonyg
