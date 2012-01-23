@@ -6,6 +6,14 @@
 ;;; A 2-3Tree is a self-balancing datastructure, similar to red-black and AVL trees.
 ;;; See http://en.wikipedia.org/wiki/2-3_tree for more information.
 
+#| 
+Todo:  
+- Permit custom comparators
+- Benchmarks
+- tree->list
+- map, fold etc.. 
+|#
+
 (require racket/match)
 
 (provide find 
@@ -15,11 +23,11 @@
          list->tree)
 
 
-(struct 2-node (v l r) #:transparent)
-(struct 3-node (v1 v2 l m r) #:transparent)
+(struct 2-node (v l r))
+(struct 3-node (v1 v2 l m r))
 
-(struct split-node (v l r) #:transparent)
-(struct hole-node (t) #:transparent)
+(struct split-node (v l r))
+(struct hole-node (t))
 
 
 ;;; --------------------------------------------------------------------------
