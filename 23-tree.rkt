@@ -16,12 +16,11 @@ Todo:
 
 (require racket/match)
 
-(provide find 
-         insert 
-         delete 
-         size 
-         list->tree)
-
+(provide 23-tree-find 
+         23-tree-insert 
+         23-tree-delete 
+         23-tree-size 
+         list->23-tree)
 
 (struct 2-node (v l r))
 (struct 3-node (v1 v2 l m r))
@@ -33,18 +32,18 @@ Todo:
 ;;; --------------------------------------------------------------------------
 ;;; Search
 
-(define (find tree k)
+(define (23-tree-find tree k)
   (match tree
     [(2-node v l r) 
-     (cond [(< k v) (find l k)]
-           [(> k v) (find r k)]
+     (cond [(< k v) (23-tree-find l k)]
+           [(> k v) (23-tree-find r k)]
            [else k])]
     
     [(3-node v1 v2 l m r)
      (cond [(or (equal? k v1) (equal? k v2)) k]
-           [(< k v1) (find l k)]
-           [(< k v2) (find m k)]
-           [else (find r k)])]
+           [(< k v1) (23-tree-find l k)]
+           [(< k v2) (23-tree-find m k)]
+           [else (23-tree-find r k)])]
     
     [else #f]))
 
@@ -59,7 +58,7 @@ Todo:
 (define (pair v1 v2)
   (3-node v1 v2 'emp 'emp 'emp))
 
-(define (insert tree k)
+(define (23-tree-insert tree k)
   (match (insert0 tree k)
     [(split-node v l r) (2-node v l r)]
     [t t]))  
@@ -98,7 +97,6 @@ Todo:
     [(3-node v1 v2 (split-node sv sl sr) m r) (split-node v1 (2-node sv sl sr) (2-node v2 m r))]
     [(3-node v1 v2 l (split-node sv sl sr) r) (split-node sv (2-node v1 l sl) (2-node v2 sr r))]
     [(3-node v1 v2 l m (split-node sv sl sr)) (split-node v2 (2-node v1 l m) (2-node sv sl sr))]
-    
     [else t]))
 
 ;; assumes y and z are already in order
@@ -110,13 +108,13 @@ Todo:
 ;;; --------------------------------------------------------------------------
 ;;; Deletion
 
-(define (delete tree k)
+(define (23-tree-delete tree k)
   (match (delete0 tree k)
     [(hole-node t) t]
     [t t]))
 
 (define (delete0 tree k) 
-  (bubble-holes 
+  (bubble-fill-holes 
    (match tree
      [(2-node v 'emp 'emp)
       (if (equal? k v)
@@ -155,7 +153,7 @@ Todo:
      ['emp 'emp])))
 
 ;; todo: synthesize this automatically 
-(define (bubble-holes t)
+(define (bubble-fill-holes t)
   (match t
     [(2-node v (hole-node ht) (2-node rv rl rr)) 
      (hole-node (3-node v rv ht rl rr))]    
@@ -206,10 +204,10 @@ Todo:
 ;;; --------------------------------------------------------------------------
 ;;; Helpers
 
-(define (list->tree lst)
+(define (list->23-tree lst)
   (for/fold ([t 'emp])
     ([i (in-list lst)])
-    (insert t i)))
+    (23-tree-insert t i)))
 
 (define (balanced? tree)
   (match tree
@@ -226,10 +224,10 @@ Todo:
     
     ['emp (values #t 0)]))
 
-(define (size tree)
+(define (23-tree-size tree)
   (match tree
-    [(2-node _ l r) (+ 1 (size l) (size r))]
-    [(3-node _ _ l m r) (+ 2 (size l) (size m) (size r))]
+    [(2-node _ l r) (+ 1 (23-tree-size l) (23-tree-size r))]
+    [(3-node _ _ l m r) (+ 2 (23-tree-size l) (23-tree-size m) (23-tree-size r))]
     ['emp 0]))
 
 
