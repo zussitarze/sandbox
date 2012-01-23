@@ -1,18 +1,13 @@
-#lang racket/base
+#lang racket
 
 ;;; Functional implementation of a 2-3 tree
 ;;; TomM 2012
 
-;;; A 2-3Tree is a self-balancing datastructure, similar to red-black and AVL trees.
+;;; A 2-3 tree is a self-balancing data-structure, similar to red-black and AVL trees.
 ;;; See http://en.wikipedia.org/wiki/2-3_tree for more information.
 
-#| 
-Todo:  
-- Permit custom comparators
-- Benchmarks
-- tree->list
-- map, fold etc.. 
-|#
+;;;Todo:  
+;;; - Permit custom comparators (only works with numbers right now)
 
 (require racket/match)
 (require racket/contract)
@@ -22,27 +17,57 @@ Todo:
   #:∃ 23-tree
   [make-23-tree (-> 23-tree)]
   [23-tree-empty? (-> 23-tree boolean?)]
+  [list->23-tree (-> (listof number?) 23-tree)]
+  [23-tree->list (-> 23-tree (listof number?))]  
   [23-tree-find (-> 23-tree number? (or/c number? #f))]
   [23-tree-insert (-> 23-tree number? 23-tree)]
   [23-tree-delete (-> 23-tree number? 23-tree)]
   [23-tree-size (-> 23-tree integer?)]
-  [list->23-tree (-> (listof number?) 23-tree)]
-  
+    
   ;; for tests
   [23-tree-balanced? (-> 23-tree (values boolean? integer?))]))
 
+
 (struct 2-node (v l r))
 (struct 3-node (v1 v2 l m r))
-
 (struct split-node (v l r))
 (struct hole-node (t))
 
+
+;;; --------------------------------------------------------------------------
+;;; Construction / Utils
 
 (define (make-23-tree)
   'emp)
 
 (define (23-tree-empty? tree)
   (eq? tree 'emp))
+
+(define (list->23-tree lst)
+  (for/fold ([t 'emp])
+    ([i (in-list lst)])
+    (23-tree-insert t i)))
+
+(define (23-tree->list tree)
+  (let walk-inorder ([t tree] [acc '()])
+    (match t
+      [(2-node v l r) 
+       (walk-inorder l (cons v (walk-inorder r acc)))]
+      
+      [(3-node v1 v2 l m r)
+       (define acc2 (walk-inorder r acc))
+       (define acc3 (cons v2 acc2))
+       (define acc4 (walk-inorder m acc3))
+       (define acc5 (cons v1 acc4))
+       (walk-inorder l acc5)]
+      
+      ['emp acc])))
+
+(define (23-tree-size tree)
+  (match tree
+    [(2-node _ l r) (+ 1 (23-tree-size l) (23-tree-size r))]
+    [(3-node _ _ l m r) (+ 2 (23-tree-size l) (23-tree-size m) (23-tree-size r))]
+    ['emp 0]))
 
 ;;; --------------------------------------------------------------------------
 ;;; Search
@@ -64,8 +89,6 @@ Todo:
 
 ;;; --------------------------------------------------------------------------
 ;;; Insertion
-;;;
-;;;
 
 (define (singleton v)
   (2-node v 'emp 'emp))
@@ -217,13 +240,8 @@ Todo:
              (smallest-member (3-node-l tree)))]))
 
 ;;; --------------------------------------------------------------------------
-;;; Helpers
-
-(define (list->23-tree lst)
-  (for/fold ([t 'emp])
-    ([i (in-list lst)])
-    (23-tree-insert t i)))
-
+;;; Misc
+         
 (define (23-tree-balanced? tree)
   (match tree
     [(2-node _ l r) 
@@ -238,21 +256,5 @@ Todo:
      (values (and bl? bm? br? (= hl hm hr)) (+ hl 1))]
     
     ['emp (values #t 0)]))
-
-(define (23-tree-size tree)
-  (match tree
-    [(2-node _ l r) (+ 1 (23-tree-size l) (23-tree-size r))]
-    [(3-node _ _ l m r) (+ 2 (23-tree-size l) (23-tree-size m) (23-tree-size r))]
-    ['emp 0]))
-
-
-
-
-
-
-
-
-
-
 
 

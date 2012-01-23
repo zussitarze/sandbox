@@ -84,3 +84,10 @@
                                (23-tree-delete t v))))
  (define t1 (insert-range 0 num 1 (delete-range 0 (- num 500) 1 t0)))
  (check-equal? (23-tree-size t1) num))
+
+(test-case 
+ "Sorted order"
+ (define t (list->23-tree (shuffle (build-list 100 values))))
+ (check-true (apply < (23-tree->list t))))
+  
+
