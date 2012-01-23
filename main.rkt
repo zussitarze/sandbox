@@ -15,12 +15,21 @@ Todo:
 |#
 
 (require racket/match)
+(require racket/contract)
 
-(provide 23-tree-find 
-         23-tree-insert 
-         23-tree-delete 
-         23-tree-size 
-         list->23-tree)
+(provide 
+ (contract-out 
+  #:∃ 23-tree
+  [make-23-tree (-> 23-tree)]
+  [23-tree-empty? (-> 23-tree boolean?)]
+  [23-tree-find (-> 23-tree number? (or/c number? #f))]
+  [23-tree-insert (-> 23-tree number? 23-tree)]
+  [23-tree-delete (-> 23-tree number? 23-tree)]
+  [23-tree-size (-> 23-tree integer?)]
+  [list->23-tree (-> (listof number?) 23-tree)]
+  
+  ;; for tests
+  [23-tree-balanced? (-> 23-tree (values boolean? integer?))]))
 
 (struct 2-node (v l r))
 (struct 3-node (v1 v2 l m r))
@@ -28,6 +37,12 @@ Todo:
 (struct split-node (v l r))
 (struct hole-node (t))
 
+
+(define (make-23-tree)
+  'emp)
+
+(define (23-tree-empty? tree)
+  (eq? tree 'emp))
 
 ;;; --------------------------------------------------------------------------
 ;;; Search
@@ -209,17 +224,17 @@ Todo:
     ([i (in-list lst)])
     (23-tree-insert t i)))
 
-(define (balanced? tree)
+(define (23-tree-balanced? tree)
   (match tree
     [(2-node _ l r) 
-     (define-values (bl? hl) (balanced? l))
-     (define-values (br? hr) (balanced? r))
+     (define-values (bl? hl) (23-tree-balanced? l))
+     (define-values (br? hr) (23-tree-balanced? r))
      (values (and bl? br? (= hl hr)) (+ hl 1))]
     
     [(3-node _ _ l m r)
-     (define-values (bl? hl) (balanced? l))
-     (define-values (bm? hm) (balanced? m))
-     (define-values (br? hr) (balanced? r))
+     (define-values (bl? hl) (23-tree-balanced? l))
+     (define-values (bm? hm) (23-tree-balanced? m))
+     (define-values (br? hr) (23-tree-balanced? r))
      (values (and bl? bm? br? (= hl hm hr)) (+ hl 1))]
     
     ['emp (values #t 0)]))

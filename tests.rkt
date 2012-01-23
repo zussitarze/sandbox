@@ -1,9 +1,8 @@
 #lang racket
 
-(require "23-tree.rkt" rackunit)
-(require/expose "23-tree.rkt" (pair singleton balanced?))
+(require "main.rkt" rackunit)
 
-(define (insert-range a b step [t 'emp])
+(define (insert-range a b step [t (make-23-tree)])
   (for/fold ([t t])
     ([v (in-range a b step)])
     (23-tree-insert t v)))
@@ -14,7 +13,7 @@
     (23-tree-delete t v)))
 
 (define (test-balanced t)
-  (define-values (b? h) (balanced? t))
+  (define-values (b? h) (23-tree-balanced? t))
   (define s (23-tree-size t))
   (check-true b?)
   (check-true (or (= 0 s) (= 1 s)
@@ -25,16 +24,16 @@
   (/ (log n) (log b)))
 
 (test-begin 
- (check-equal? (23-tree-find (singleton 255) 255) 255)
- (check-equal? (23-tree-find (23-tree-insert 'emp 255) 255) 255)
- (check-equal? (23-tree-size (23-tree-insert (pair 25 50) 50)) 2))
+ (check-equal? (23-tree-find (list->23-tree '(255)) 255) 255)
+ (check-equal? (23-tree-find (list->23-tree '(255 255)) 255) 255)
+ (check-equal? (23-tree-size (list->23-tree '(25 50))) 2))
 
 (test-case 
  "Balanced"
- (test-balanced 'emp)
- (test-balanced (singleton 10))
- (test-balanced (pair 10 20))
- (test-balanced (23-tree-insert (pair 10 20) 30)))
+ (test-balanced (make-23-tree))
+ (test-balanced (list->23-tree '(10)))
+ (test-balanced (list->23-tree '(10 20)))
+ (test-balanced (list->23-tree '(10 20 30))))
 
 (test-begin
  (define t (insert-range 0 100 1))
@@ -53,8 +52,8 @@
 
 (test-case 
  "Simple deletions"
- (check-equal? (23-tree-delete 'emp 50) 'emp)
- (check-equal? (23-tree-delete (singleton 10) 10) 'emp)
+ (check-true (23-tree-empty? (23-tree-delete (make-23-tree) 50)))
+ (check-true (23-tree-empty? (23-tree-delete (list->23-tree '(10)) 10)))
  (check-equal? (23-tree-find (23-tree-delete (list->23-tree '(10 20 30 40)) 50) 10) 10))
 
 (test-case 
@@ -67,7 +66,7 @@
    (check-equal? (23-tree-find td v) v))
  (for ([v (in-range 50 1001)])
    (check-false (23-tree-find td v) v))
- (check-equal? (delete-range 0 50 1 td) 'emp))
+ (check-true (23-tree-empty? (delete-range 0 50 1 td))))
 
 (test-case 
  "Delete non-existent"
@@ -79,10 +78,9 @@
  (define num 2500) 
  (define lst (shuffle (build-list num values)))
  (define t0 (list->23-tree lst))
- (check-equal? (delete-range 0 num 1 t0) 'emp)
- (check-equal? (for/fold ([t t0])
-                 ([v (in-list lst)])
-                 (23-tree-delete t v))
-               'emp)
+ (check-true (23-tree-empty? (delete-range 0 num 1 t0)))
+ (check-true (23-tree-empty? (for/fold ([t t0])
+                               ([v (in-list lst)])
+                               (23-tree-delete t v))))
  (define t1 (insert-range 0 num 1 (delete-range 0 (- num 500) 1 t0)))
  (check-equal? (23-tree-size t1) num))
