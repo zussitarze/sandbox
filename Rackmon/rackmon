@@ -1,0 +1,64 @@
+#! /usr/bin/env racket
+#lang racket/base
+
+;;; A simple utility to re/execute a system process in reaction to file modification.
+;;; Useful for developing with the racket web server.
+;;;
+;;; (todo: This is in desperate need of kqueue/inotify)
+
+(require racket/file
+         racket/cmdline
+         racket/function
+         racket/string)
+
+(define polling-interval (make-parameter 5))
+(define extensions (make-parameter '("rkt" "html")))
+(define daemon-sema (make-semaphore 0))
+
+(define (daemon cmd)
+  (define (loop)
+    (current-subprocess-custodian-mode 'kill)
+    (define-values (proc _o _i _e) 
+      (subprocess (current-output-port)
+                  (current-input-port)
+                  (current-error-port) 
+                  "/usr/bin/env" "racket" cmd))
+    (printf "started!~n")
+    (semaphore-wait daemon-sema)
+    (subprocess-kill proc #t)
+    (printf "restarting... ")
+    (loop))
+  loop)
+
+(define (latest-mod dir extra)
+  (define (get-ts p) 
+    (file-or-directory-modify-seconds p #f (const 0)))  
+  (define re (regexp 
+              (string-join (map (λ (ext) (string-append "[.]" ext "$")) (extensions))
+                           "|")))
+  (define fs (append (find-files (λ (p) (regexp-match? re p)) dir) 
+                     extra))
+  (apply max (map get-ts fs)))
+
+(define (monitor cmd dir extra)
+  (thread (daemon cmd))
+  (let watch-loop ([ts (latest-mod dir extra)])
+    (sleep (polling-interval))
+    (define latest-ts (latest-mod dir extra))
+    (when (> latest-ts ts)
+      (semaphore-post daemon-sema))    
+    (watch-loop latest-ts)))
+
+(command-line 
+ #:program "rackmon"
+ #:once-each 
+ [("-i" "--poll-interval") pi 
+                            "Polling interval in seconds (default 3)"
+                            (polling-interval (string->number pi))]
+ #:multi
+ [("-e" "--ext") ext
+                 "Other extentions to monitor (defaults: rkt html)"
+                 (extensions (cons ext (extensions)))] 
+ #:args (cmd [dir "."] . extra-dir)
+ (monitor cmd dir extra-dir))
+
