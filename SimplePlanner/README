@@ -1,0 +1,23 @@
+Simple forward search planner.
+
+Planning problems consist of three components: Domain, initial state, and goal 
+state; with all three being termed a 'problem set'. Users may specify the 
+domain and states using a small DSL language, implement entirely in racket 
+macros. Solutions to planning problems are computed using a naive 
+forward-search.
+
+Problems domains consist of two key elements. Constants, which form a type over 
+action parameters, and the actions themselves. Each action may contain a list 
+of typed parameters, followed by preconditions and effects.
+
+A state is a representation of closed-form knowledge. That is, only facts 
+present in the state are considered true --all others as false. State is 
+specified as a sequence of entries of the form: NAME (ARG ...) = VAL. For 
+instance, if colour (sky) = blue, then blue is the answer to the query colour 
+(sky).
+
+If the problem set can be solved, the planner prints out the required sequence 
+of actions leading from the initial to goal state.
+
+See: example.rkt
+
